@@ -1,0 +1,186 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>Astral Dungeon RPG: Knight of the Ruins</title>
+<style>
+:root{--gold:#ffd166;--crimson:#ff4d6d;--blue:#4cc9f0;--bg:#070d18;--card:rgba(12,22,40,0.85);--border:rgba(255,209,102,0.3)}
+*{box-sizing:border-box;-webkit-user-select:none;user-select:none}
+html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#050912;font-family:'Segoe UI',Roboto,Helvetica,sans-serif;color:#f0f6fc}
+#canvas-container{position:fixed;inset:0;width:100%;height:100%;z-index:1}
+canvas{display:block;width:100%;height:100%}
+
+/* HUD OVERLAY */
+#hud{position:fixed;inset:0;pointer-events:none;z-index:10;display:flex;flex-direction:column;justify-content:space-between;padding:18px}
+.hud-row{display:flex;justify-content:space-between;align-items:flex-start}
+
+.panel{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:12px 18px;backdrop-filter:blur(8px);box-shadow:0 8px 32px rgba(0,0,0,0.5);pointer-events:auto}
+.player-card{display:flex;flex-direction:column;gap:6px;min-width:260px}
+.stat-name{font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#8b9bb4}
+.bar-wrap{position:relative;width:100%;height:14px;background:#111b2e;border-radius:7px;overflow:hidden;border:1px solid rgba(255,255,255,0.1)}
+.bar-fill{height:100%;width:100%;transition:width 0.15s ease-out}
+.hp-bar{background:linear-gradient(90deg,#ff4d6d,#ff758f)}
+.stam-bar{background:linear-gradient(90deg,#4cc9f0,#4895ef)}
+.bar-text{position:absolute;inset:0;font-size:9px;font-weight:800;display:flex;align-items:center;justify-content:center;color:#fff;text-shadow:0 1px 2px #000}
+
+.loot-card{display:flex;gap:18px;align-items:center}
+.loot-item{display:flex;align-items:center;gap:6px;font-size:15px;font-weight:800;color:var(--gold)}
+.loot-icon{width:20px;height:20px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:12px}
+
+.bottom-deck{display:flex;justify-content:space-between;align-items:flex-end}
+.controls-hint{font-size:12px;color:#a0aec0;line-height:1.6;background:var(--card);border:1px solid rgba(255,255,255,0.08);border-radius:10px;padding:10px 14px}
+.controls-hint b{color:#fff}
+.action-skills{display:flex;gap:10px}
+.skill-slot{width:54px;height:54px;background:var(--card);border:2px solid var(--border);border-radius:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;font-weight:800;font-size:11px;position:relative;pointer-events:auto;cursor:pointer;transition:transform 0.1s}
+.skill-slot:active{transform:scale(0.94)}
+.skill-slot b{font-size:13px;color:var(--gold)}
+.skill-slot span{font-size:9px;color:#718096}
+
+/* DIALOG / MODAL */
+#title-modal,#game-over-modal,#victory-modal{position:fixed;inset:0;background:rgba(5,9,18,0.85);backdrop-filter:blur(10px);z-index:50;display:flex;align-items:center;justify-content:center;pointer-events:auto}
+.dialog-box{max-width:540px;width:90%;background:linear-gradient(180deg,#121d33,#09101f);border:2px solid var(--gold);border-radius:20px;padding:32px;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,0.8)}
+.dialog-kicker{font-size:12px;font-weight:800;letter-spacing:3px;text-transform:uppercase;color:var(--gold)}
+.dialog-title{font-size:38px;font-weight:900;margin:10px 0 16px;background:linear-gradient(135deg,#fff,#ffd166);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.dialog-desc{font-size:14px;color:#a0aec0;line-height:1.6;margin-bottom:24px}
+.btn-primary{background:linear-gradient(135deg,#ffd166,#f77f00);color:#0a0e17;font-weight:900;font-size:16px;padding:14px 36px;border:none;border-radius:30px;cursor:pointer;box-shadow:0 6px 20px rgba(255,209,102,0.4);transition:all 0.15s;letter-spacing:1px}
+.btn-primary:hover{transform:translateY(-2px);box-shadow:0 8px 25px rgba(255,209,102,0.6)}
+
+/* RETICLE / TARGET */
+#crosshair{position:fixed;width:24px;height:24px;border:2px dashed rgba(255,209,102,0.6);border-radius:50%;pointer-events:none;transform:translate(-50%,-50%);z-index:20;display:none}
+
+.hidden{display:none!important}
+</style>
+
+<!-- VENDOR LIBRARIES: STANDALONE OFFLINE VENDOR FALLBACK -->
+<script>
+__VENDOR_THREE__
+</script>
+<script>
+__VENDOR_GLTF__
+</script>
+<script>
+__VENDOR_SKELETON__
+</script>
+</head>
+<body>
+
+<div id="canvas-container"></div>
+<div id="crosshair"></div>
+
+<!-- HUD -->
+<div id="hud">
+  <div class="hud-row">
+    <div class="panel player-card">
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <span class="stat-name">HIỆP SĨ CỔ ĐẠI</span>
+        <span style="font-size:12px;font-weight:800;color:var(--gold)" id="hud-level">CẤP 1</span>
+      </div>
+      <div class="bar-wrap">
+        <div class="bar-fill hp-bar" id="hp-bar" style="width:100%"></div>
+        <div class="bar-text" id="hp-text">100 / 100 MÁU</div>
+      </div>
+      <div class="bar-wrap">
+        <div class="bar-fill stam-bar" id="stam-bar" style="width:100%"></div>
+        <div class="bar-text" id="stam-text">100 / 100 THỂ LỰC</div>
+      </div>
+    </div>
+
+    <div class="panel loot-card">
+      <div class="loot-item" title="Vàng">
+        <span class="loot-icon" style="background:#ffb703;color:#000">🪙</span>
+        <span id="gold-count">0</span>
+      </div>
+      <div class="loot-item" title="Đá Đỏ Ruby">
+        <span class="loot-icon" style="background:#ff4d6d">💎</span>
+        <span id="ruby-count">0</span>
+      </div>
+      <div class="loot-item" title="Đá Lam Sapphire">
+        <span class="loot-icon" style="background:#4cc9f0">🔷</span>
+        <span id="sapphire-count">0</span>
+      </div>
+      <div class="loot-item" title="Bình Máu Thánh">
+        <span class="loot-icon" style="background:#06d6a0">🧪</span>
+        <span id="potion-count">1</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="hud-row bottom-deck">
+    <div class="controls-hint">
+      <b>WASD / Mũi tên:</b> Di chuyển · <b>Chuột trái / J:</b> Combo chém<br>
+      <b>Chuột phải / K:</b> Đỡ khiên · <b>Phím cách / L:</b> Lăn né bất tử<br>
+      <b>E / Q:</b> Uống bình máu · <b>F:</b> Mở rương / Phá thùng
+    </div>
+
+    <div class="action-skills">
+      <div class="skill-slot" id="btn-attack">
+        <b>CHÉM</b>
+        <span>Chuột Trái/J</span>
+      </div>
+      <div class="skill-slot" id="btn-block">
+        <b>ĐỠ</b>
+        <span>Chuột Phải/K</span>
+      </div>
+      <div class="skill-slot" id="btn-dodge">
+        <b>NÉ</b>
+        <span>Phím Cách/L</span>
+      </div>
+      <div class="skill-slot" id="btn-heal">
+        <b>MÁU</b>
+        <span>E/Q</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- START MODAL -->
+<div id="title-modal">
+  <div class="dialog-box">
+    <div class="dialog-kicker">3D ASSET-FIRST ACTION RPG</div>
+    <div class="dialog-title">ASTRAL DUNGEON</div>
+    <div class="dialog-desc">
+      Hầm ngục cổ xưa bị phong ấn bởi bầy Skeleton Warrior. Nhập vai Hiệp sĩ dòng đền, dùng kiếm khiên chặt chém, lăn né nhịp nhàng, mở hòm báu và tiêu diệt thủ lĩnh xương để giải phóng tàn tích!
+      <br><br>
+      <span style="color:#ffd166">Đồ họa 100% GLB thật: KayKit Knight, Skeleton Warrior, Ruins Modular, Gold Chest & Gems.</span>
+    </div>
+    <button class="btn-primary" id="start-btn">TIẾN VÀO HẦM NGỤC</button>
+  </div>
+</div>
+
+<!-- GAME OVER MODAL -->
+<div id="game-over-modal" class="hidden">
+  <div class="dialog-box" style="border-color:var(--crimson)">
+    <div class="dialog-kicker" style="color:var(--crimson)">CHIẾN BINH GỤC NGÃ</div>
+    <div class="dialog-title" style="background:linear-gradient(135deg,#fff,#ff4d6d);-webkit-background-clip:text">TỬ TRẬN</div>
+    <div class="dialog-desc" id="game-over-desc">
+      Lưỡi kiếm của bộ xương đã hạ gục bạn trong bóng tối tàn tích.
+    </div>
+    <button class="btn-primary" id="restart-btn" style="background:linear-gradient(135deg,#ff4d6d,#c9184a)">HỒI SINH TẠI CỔNG</button>
+  </div>
+</div>
+
+<!-- VICTORY MODAL -->
+<div id="victory-modal" class="hidden">
+  <div class="dialog-box" style="border-color:#06d6a0">
+    <div class="dialog-kicker" style="color:#06d6a0">TÀN TÍCH ĐÃ ĐƯỢC GIẢI CỨU</div>
+    <div class="dialog-title" style="background:linear-gradient(135deg,#fff,#06d6a0);-webkit-background-clip:text">CHIẾN THẮNG!</div>
+    <div class="dialog-desc" id="victory-desc">
+      Toàn bộ bầy Skeleton đã bị tiêu diệt! Bạn đã thu thập đủ kho báu và mang lại ánh sáng cho Astral Dungeon.
+    </div>
+    <button class="btn-primary" id="victory-btn" style="background:linear-gradient(135deg,#06d6a0,#118ab2)">CHƠI LẠI TRẬN MỚI</button>
+  </div>
+</div>
+
+<!-- EMBEDDED GLB ASSET DATA -->
+<script>
+window.__EMBEDDED_ASSETS__ = __ASSETS_JSON_PLACEHOLDER__;
+</script>
+
+<!-- GAME CORE SCRIPT -->
+<script>
+__GAME_CODE_PLACEHOLDER__
+</script>
+
+</body>
+</html>

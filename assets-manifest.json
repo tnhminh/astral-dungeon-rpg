@@ -1,0 +1,23 @@
+{
+  "game_id": "astral-dungeon-rpg",
+  "visual_style": "KayKit stylized fantasy dungeon ARPG",
+  "assets": [
+    {"role":"hero_knight","path":"/mnt/e/game3d/public/assets/models/kaykit-knight.glb","required_animations":["Idle","Running_A","1H_Melee_Attack_Slice_Horizontal","Block","Dodge_Forward","Death_A"]},
+    {"role":"enemy_skeleton_warrior","path":"/mnt/e/game3d/public/assets/models/kaykit-skeleton-warrior.glb","required_animations":["Idle_Combat","Running_A","1H_Melee_Attack_Slice_Diagonal","Hit_A","Death_A"]},
+    {"role":"dungeon_ruins_pack","path":"/mnt/e/game3d/public/assets/models/ruins-pack-optimized.glb"},
+    {"role":"floor_tile","path":"/mnt/e/game3d/.vibecode-artifacts/vendor/kaykit-dungeon/addons/kaykit_dungeon_remastered/Assets/gltf/floor_tile_large.gltf.glb"},
+    {"role":"arched_wall","path":"/mnt/e/game3d/.vibecode-artifacts/vendor/kaykit-dungeon/addons/kaykit_dungeon_remastered/Assets/gltf/wall_arched.gltf.glb"},
+    {"role":"doorway","path":"/mnt/e/game3d/.vibecode-artifacts/vendor/kaykit-dungeon/addons/kaykit_dungeon_remastered/Assets/gltf/wall_doorway.glb"},
+    {"role":"stairs","path":"/mnt/e/game3d/.vibecode-artifacts/vendor/kaykit-dungeon/addons/kaykit_dungeon_remastered/Assets/gltf/stairs_wide.gltf.glb"},
+    {"role":"pillar","path":"/mnt/e/game3d/public/assets/models/kaykit-dungeon/pillar_decorated.gltf.glb"},
+    {"role":"chest","path":"/mnt/e/game3d/public/assets/models/kaykit-dungeon/chest_gold.glb"},
+    {"role":"barrel","path":"/mnt/e/game3d/public/assets/models/kaykit-dungeon/barrel_large_decorated.gltf.glb"},
+    {"role":"sword_shield","path":"/mnt/e/game3d/public/assets/models/kaykit-dungeon/sword_shield_gold.gltf.glb"},
+    {"role":"coin_stack","path":"/mnt/e/game3d/.vibecode-artifacts/vendor/kaykit-dungeon/addons/kaykit_dungeon_remastered/Assets/gltf/coin_stack_large.gltf.glb"},
+    {"role":"ruby","path":"/mnt/e/2048-like/models/gem_red.glb"},
+    {"role":"sapphire","path":"/mnt/e/2048-like/models/gem_blue.glb"},
+    {"role":"health_potion","path":"/mnt/e/game3d/.vibecode-artifacts/vendor/kaykit-dungeon/addons/kaykit_dungeon_remastered/Assets/gltf/bottle_A_labeled_brown.gltf.glb"},
+    {"role":"mounted_torch","path":"/mnt/e/game3d/public/assets/models/kaykit-dungeon/torch_mounted.gltf.glb"}
+  ],
+  "embedding":{"mode":"base64-data-uri","loader":"THREE.GLTFLoader.parse","draco":false,"external_texture_uri":false}
+}
